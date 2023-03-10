@@ -79,6 +79,53 @@
 // Section: Driver Initialization Data
 // *****************************************************************************
 // *****************************************************************************
+// <editor-fold defaultstate="collapsed" desc="DRV_SPI Instance 0 Initialization Data">
+
+/* SPI Client Objects Pool */
+static DRV_SPI_CLIENT_OBJ drvSPI0ClientObjPool[DRV_SPI_CLIENTS_NUMBER_IDX0];
+
+/* SPI PLIB Interface Initialization */
+const DRV_SPI_PLIB_INTERFACE drvSPI0PlibAPI = {
+
+    /* SPI PLIB Setup */
+    .setup = (DRV_SPI_PLIB_SETUP)SERCOM0_SPI_TransferSetup,
+
+    /* SPI PLIB WriteRead function */
+    .writeRead = (DRV_SPI_PLIB_WRITE_READ)SERCOM0_SPI_WriteRead,
+
+    /* SPI PLIB Transfer Status function */
+    .isTransmitterBusy = (DRV_SPI_PLIB_TRANSMITTER_IS_BUSY)SERCOM0_SPI_IsTransmitterBusy,
+
+    /* SPI PLIB Callback Register */
+    .callbackRegister = (DRV_SPI_PLIB_CALLBACK_REGISTER)SERCOM0_SPI_CallbackRegister,
+};
+
+const uint32_t drvSPI0remapDataBits[]= { 0x0, 0x1, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+const uint32_t drvSPI0remapClockPolarity[] = { 0x0, 0x20000000 };
+const uint32_t drvSPI0remapClockPhase[] = { 0x10000000, 0x0 };
+
+/* SPI Driver Initialization Data */
+const DRV_SPI_INIT drvSPI0InitData =
+{
+    /* SPI PLIB API */
+    .spiPlib = &drvSPI0PlibAPI,
+
+    .remapDataBits = drvSPI0remapDataBits,
+
+    .remapClockPolarity = drvSPI0remapClockPolarity,
+
+    .remapClockPhase = drvSPI0remapClockPhase,
+
+    /* SPI Number of clients */
+    .numClients = DRV_SPI_CLIENTS_NUMBER_IDX0,
+
+    /* SPI Client Objects Pool */
+    .clientObjPool = (uintptr_t)&drvSPI0ClientObjPool[0],
+
+
+};
+
+// </editor-fold>
 
 
 // *****************************************************************************
@@ -143,6 +190,8 @@ void SYS_Initialize ( void* data )
     SERCOM0_SPI_Initialize();
 
 
+    /* Initialize SPI0 Driver Instance */
+    sysObj.drvSPI0 = DRV_SPI_Initialize(DRV_SPI_INDEX_0, (SYS_MODULE_INIT *)&drvSPI0InitData);
 
 
 
