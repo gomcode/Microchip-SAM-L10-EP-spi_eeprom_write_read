@@ -31,7 +31,7 @@
 /* Application's state machine enum */
 typedef enum
 {
-	APP_STATE_INITIALIZE,
+     APP_STATE_INITIALIZE,
     APP_STATE_EEPROM_WRITE_ENABLE,
     APP_STATE_EEPROM_WRITE,
     APP_STATE_EEPROM_READ_STATUS,
@@ -56,30 +56,22 @@ typedef enum
 #define EEPROM_DATA                         "WRITING AND READING DATA FROM EEPROM!"
 #define EEPROM_DATA_LEN                     sizeof(EEPROM_DATA)
 
-/* Global variables */
+#define SPI_MOSI                                    15  //PA14
+#define SPI_MISO                                    5   //PA04
+#define SPI_SCK                                      16  //PA15
+#define GPIO_RST                                    22  //PA23
+#define CLCD_CS                                     6   //PA05
 
-// EEPROM CMD (1) + EEPROM ADDR (3) + EEPROM_DATA_LEN
-uint8_t  txData[(4 + EEPROM_DATA_LEN)];
-uint8_t  rxData[(4 + EEPROM_DATA_LEN)];
+#define CLCD_TX_DATA_LEN                       8
+void CLCD_Write(uint8_t tx_data) {
+    SERCOM0_SPI_Write(&tx_data, CLCD_TX_DATA_LEN);
+}
+
+
 volatile bool isTransferDone = false;
 APP_STATES state = APP_STATE_INITIALIZE;
 
-/* This function will be called by SPI PLIB when transfer is completed */
-void SPIEventHandler(uintptr_t context )
-{
-    /* De-assert the chip select */
-    EEPROM_CS_Set();
 
-    isTransferDone = true;
-}
-
-void EEPROM_Initialize (void)
-{
-    EEPROM_HOLD_Set();
-    EEPROM_WP_Set();
-    EEPROM_CS_Set();
-    LED_Off();
-}
 // *****************************************************************************
 // *****************************************************************************
 // Section: Main Entry Point
@@ -88,121 +80,19 @@ void EEPROM_Initialize (void)
 
 int main ( void )
 {
-    uint32_t eepromAddr = EEPROM_ADDRESS;
+
 
     /* Initialize all modules */
     SYS_Initialize ( NULL );
+    
+    CLCD_Write(0x23);
 
     while(1)
     {
         /* Check the application's current state. */
-        switch (state)
-        {
-            case APP_STATE_INITIALIZE:
-                EEPROM_Initialize();
-                /* Register callback with the SPI PLIB */
-                SERCOM0_SPI_CallbackRegister(SPIEventHandler, (uintptr_t) 0);
-                state = APP_STATE_EEPROM_WRITE_ENABLE;
-                break;
-
-            case APP_STATE_EEPROM_WRITE_ENABLE:
-                // Enable Writes to EEPROM
-                txData[0] = EEPROM_CMD_WREN;
-                GPIO_PA23_Clear();
-                SERCOM0_SPI_Write(txData, 1);
-                state = APP_STATE_EEPROM_WRITE;
-                break;
-
-            case APP_STATE_EEPROM_WRITE:
-                if (isTransferDone == true)
-                {
-                    isTransferDone = false;
-                    //Copy the write command and the memory address to write to
-                    txData[0] = EEPROM_CMD_WRITE;
-                    txData[1] = (uint8_t)(eepromAddr>>16);
-                    txData[2] = (uint8_t)(eepromAddr>>8);
-                    txData[3] = (uint8_t)(eepromAddr);
-                    //Copy the data to be written to EEPROM
-                    memcpy(&txData[4], EEPROM_DATA, EEPROM_DATA_LEN);
-                    GPIO_PA23_Clear();
-                    SERCOM0_SPI_Write(txData, (4 + EEPROM_DATA_LEN));
-                    state = APP_STATE_EEPROM_READ_STATUS;
-                }
-                break;
-
-            case APP_STATE_EEPROM_READ_STATUS:
-                if (isTransferDone == true)
-                {
-                    isTransferDone = false;
-                    /* Read the status of the internal write operation  */
-                    txData[0] = EEPROM_CMD_RDSR;
-                    GPIO_PA23_Clear();
-                    SERCOM0_SPI_WriteRead(txData, 1, rxData, 2);
-                    state = APP_STATE_EEPROM_CHECK_STATUS;
-                }
-                break;
-
-            case APP_STATE_EEPROM_CHECK_STATUS:
-                if (isTransferDone == true)
-                {
-                    isTransferDone = false;
-                    if(!(rxData[1] & 0x01))
-                    {
-                        /* It means write has been completed */
-                        state = APP_STATE_EEPROM_READ;
-                    }
-                    else
-                    {
-                        // Keep reading the status of the internal write operation
-                        txData[0] = EEPROM_CMD_RDSR;
-                        GPIO_PA23_Clear();
-                        SERCOM0_SPI_WriteRead(txData, 1, rxData, 2);
-                    }
-                }
-                break;
-
-            case APP_STATE_EEPROM_READ:
-
-                // Copy the read command and the memory address to read from
-                txData[0] = EEPROM_CMD_READ;
-                txData[1] = (uint8_t)(eepromAddr>>16);
-                txData[2] = (uint8_t)(eepromAddr>>8);
-                txData[3] = (uint8_t)(eepromAddr);
-
-                GPIO_PA23_Clear();
-                SERCOM0_SPI_WriteRead(txData, 4, rxData, (4 + EEPROM_DATA_LEN));
-                state = APP_STATE_DATA_COMPARISON;
-
-                break;
-
-            case APP_STATE_DATA_COMPARISON:
-                if (isTransferDone == true)
-                {
-                    isTransferDone = false;
-                    if (memcmp(&txData[4], &rxData[4], EEPROM_DATA_LEN) != 0)
-                    {
-                        /* It means received data is not same as transmitted data */
-                        state = APP_STATE_XFER_ERROR;
-                    }
-                    else
-                    {
-                        /* It means received data is same as transmitted data */
-                        state = APP_STATE_XFER_SUCCESSFUL;
-                    }
-                }
-                break;
-
-            case APP_STATE_XFER_SUCCESSFUL:
-                LED_On();
-                break;
-
-            case APP_STATE_XFER_ERROR:
-                LED_Off();
-                break;
-
-            default:
-                break;
-        }
+        
+        
+        
     }
 }
 
