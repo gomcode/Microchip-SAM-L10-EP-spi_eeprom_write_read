@@ -96,6 +96,7 @@ build/sam_l10_xpro/production/_ext/1360937237/main.o: ../src/main.c \
  ../src/config/sam_l10_xpro/system/system_module.h \
  ../src/config/sam_l10_xpro/system/system_common.h \
  ../src/config/sam_l10_xpro/driver/spi/src/drv_spi_local.h \
+ ../src/config/sam_l10_xpro/driver/spi/drv_spi.h \
  ../src/config/sam_l10_xpro/osal/osal.h \
  ../src/config/sam_l10_xpro/configuration.h \
  ../src/config/sam_l10_xpro/osal/osal_definitions.h \
@@ -294,6 +295,8 @@ build/sam_l10_xpro/production/_ext/1360937237/main.o: ../src/main.c \
 ../src/config/sam_l10_xpro/system/system_common.h:
 
 ../src/config/sam_l10_xpro/driver/spi/src/drv_spi_local.h:
+
+../src/config/sam_l10_xpro/driver/spi/drv_spi.h:
 
 ../src/config/sam_l10_xpro/osal/osal.h:
 
